@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <link rel="stylesheet" href="https://raw.githubusercontent.com/jeromeetienne/AR.js/master/aframe/src/location-based/stylesheets/index.css">
+    <script>
+        function loadPlaces() {
+            return [
+                {
+                    name: "PoI 1",
+                    location: {
+                        lat: 51.939420, 
+                        lng: 7.600610, 
+                    }
+                },
+                {
+                    name: 'PoI 2',
+                    location: {
+                        lat: 51.938997,
+                        lng: 7.600610,
+                    }
+                }
+            ];
+        }
+        window.onload = () => {
+            places = loadPlaces();
+            scene = document.querySelector('a-scene');
+
+            places.forEach((place) => {
+                const latitude = place.location.lat;
+                const longitude = place.location.lng;
+
+                // add place icon
+                const icon = document.createElement('a-image');
+                icon.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude}`);
+                icon.setAttribute('name', place.name);
+                icon.setAttribute('src', 'img/map-marker.png');
+                icon.setAttribute('look-at', '[gps-camera]');
+
+                // for debug purposes, just show in a bigger scale
+                icon.setAttribute('scale', '10, 10');
+
+                //icon.addEventListener('loaded', () => window.dispatchEvent(new CustomEvent('gps-entity-place-loaded')));
+                console.log(icon);
+                scene.appendChild(icon);
+            });
+        };
+    </script>
+  </head>
+    <body style="margin : 0px; overflow: hidden;">
+      <a-scene embedded arjs>
+         <a-camera gps-camera="simulateLatitude: 51.939296; simulateLongitude: 7.601188" rotation-reader> </a-camera> 
+         <!-- <a-camera gps-camera rotation-reader> </a-camera>-->
+      </a-scene>
+    </body>
+  </html>

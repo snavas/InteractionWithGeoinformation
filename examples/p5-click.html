@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <script src="https://aframe.io/releases/0.9.2/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <link rel="stylesheet" href="https://raw.githubusercontent.com/jeromeetienne/AR.js/master/aframe/src/location-based/stylesheets/index.css">
+    <script>
+        
+        AFRAME.registerComponent("clickhandler", {
+          init: function() {
+            this.el.addEventListener("click", () => {
+              alert(this.el.getAttribute('name'));
+            });
+          }
+        });
+        
+        function loadPlaces(position){
+            // Foursquare API
+            var params = {
+                radius: 300,    // search places not farther than this value (in meters)
+                clientId: '5501OCXQANODSIZ14P45JYGC5WSLYG0EZZRARAWIMHKY1VXR',   // add your credentials here
+                clientSecret: 'R2WDLFKV5SC3ANGBB2IEOG2ERZWDLF3TAZEUU12CZ034IRUB',   // add your credentials here
+                version: '20300101',    // foursquare versioning, required but unuseful for this demo
+            };
+            
+            var endpoint = `https://api.foursquare.com/v2/venues/search?intent=checkin
+                &ll=${position.latitude},${position.longitude}
+                &radius=${params.radius}
+                &client_id=${params.clientId}
+                &client_secret=${params.clientSecret}
+                &limit=15
+                &v=${params.version}`;
+            
+            return fetch(endpoint)
+                .then((res) => {
+                    return res.json()
+                        .then((resp) => {
+                            return resp.response.venues;
+                        })
+                })
+                .catch((err) => {
+                    console.error('Error with places API', err);
+                })
+        }
+        
+        window.onload = () => {
+            return navigator.geolocation.getCurrentPosition(function (position) { //get current user location
+                loadPlaces(position.coords) // call to loadPlaces
+                    .then((places) => {
+                        // get scene
+                        var scene = document.querySelector('a-scene');
+                        // add every PoI to the scene
+                        places.forEach((place) => {
+                            const latitude = place.location.lat;
+                            const longitude = place.location.lng;
+
+                            // add place icon
+                            const icon = document.createElement('a-image');
+                            icon.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude}`);
+                            icon.setAttribute('name', place.name);
+                            icon.setAttribute('src', 'img/map-marker.png');
+                            icon.setAttribute('look-at', '[gps-camera]');
+                            icon.setAttribute('clickhandler', true);
+
+                            // for debug purposes, just show in a bigger scale
+                            icon.setAttribute('scale', '20, 20');
+
+                            scene.appendChild(icon);
+                        }); 
+                    })
+            },
+                (err) => console.error('Error in retrieving position', err),
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 27000,
+                }
+            );
+        };
+    </script>
+  </head>
+  <body style="margin : 0px; overflow: hidden;">
+      <a-scene
+          cursor="rayOrigin: mouse; fuse: true; fuseTimeout: 0;"
+          raycaster="objects: [clickhandler];"
+          vr-mode-ui="enabled: false"
+          embedded
+          arjs="sourceType: webcam; debugUIEnabled: false;"
+        >
+        <a-camera gps-camera rotation-reader> </a-camera>
+      </a-scene>
+  </body>
+</html>
